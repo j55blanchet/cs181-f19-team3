@@ -1,0 +1,6 @@
+[submodule "src/husarion_ros"]
+	path = src/husarion_ros
+	url = https://github.com/husarion/husarion_ros.git
+[submodule "src/rosbot_webui"]
+	path = src/rosbot_webui
+	url = https://github.com/husarion/rosbot_webui.git
