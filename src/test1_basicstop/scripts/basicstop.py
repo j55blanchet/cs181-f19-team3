@@ -13,7 +13,7 @@ SAFETY_THRESHOLD = 0.5
 class RobotState:
     def __init__(self):
         self.cmd_pub = rospy.Publisher("cmd_vel", Twist, queue_size=0)
-        self.scan_sub = rospy.Subscriber("base_scan", LaserScan, self.scan_callback, queue_size=1)
+        self.scan_sub = rospy.Subscriber("scan", LaserScan, self.scan_callback, queue_size=1)
         self.rate = rospy.Rate(RATE)
         self.state = 0 # 0: stopped, 1: move forward
 
