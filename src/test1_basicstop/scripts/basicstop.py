@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import rospy
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
 
-RATE = 10
-LIN_VEL = 0.3
-SAFETY_THRESHOLD = 0.7
+RATE = 5
+LIN_VEL = 0.5
+SAFETY_THRESHOLD = 0.5
 
 
 class RobotState:
@@ -18,10 +19,13 @@ class RobotState:
 
     def scan_callback(self, msg):
         index = len(msg.ranges)/2
-        if msg.ranges[index] <SAFETY_THRESHOLD:
+        measurement = msg.ranges[index]
+        if measurement <SAFETY_THRESHOLD:
             self.state = 0
-            return
-        self.state = 1
+        else:
+            self.state = 1
+
+        print("Measurement: %0.2f, state: %d" % (measurement, self.state))
 
     def spin(self):
        vel_msg = Twist()
