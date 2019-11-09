@@ -6,8 +6,8 @@ from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
 
 RATE = 5
-LIN_VEL = 0.5
-SAFETY_THRESHOLD = 0.5
+LIN_VEL = 0.2
+SAFETY_THRESHOLD = 1.5
 
 
 class RobotState:
@@ -18,7 +18,7 @@ class RobotState:
         self.state = 0 # 0: stopped, 1: move forward
 
     def scan_callback(self, msg):
-        index = len(msg.ranges)/2
+        index = 0
         measurement = msg.ranges[index]
         if measurement <SAFETY_THRESHOLD:
             self.state = 0
