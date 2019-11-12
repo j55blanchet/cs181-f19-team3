@@ -7,9 +7,15 @@ Team 3 | CS 181 | Fall 2019
 
 ### Setup
 
-1. Install alvar package `sudo apt-get install ros-kinetic-ar-track-alvar`
-    * for melodic, use `sudo apt-get install ros-melodic-ar-track-alvar`
-2. Run `catkin_make` in repo base
+1. `git submodule init` 
+1. `git submodule update`
+
+1. Install packages
+    * `sudo apt-get install -y ros-kinetic-ar-track-alvar ros-kinetic-depthimage-to-laserscan ros-kinetic-find-object-2d ros-kinetic-frontier-exploration ros-kinetic-gmapping ros-kinetic-grid-map`
+
+1. If you plan on using Gazebo simulations, run: `rosdep install --from-paths src --ignore-src -r -y`
+
+1. Run `catkin_make` in repo base
 
 ## System Architecture
 

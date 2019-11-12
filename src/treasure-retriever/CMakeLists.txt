@@ -9,7 +9,6 @@ project(treasure-retriever)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   actionlib
-  actionlib
   ar_track_alvar
   depthimage_to_laserscan
   diagnostic_msgs
@@ -17,9 +16,9 @@ find_package(catkin REQUIRED COMPONENTS
   frontier_exploration
   geometry_msgs
   gmapping
-  grid_map
+#  grid_map
   image_transport
-  move_base
+#  move_base
   nav_msgs
   rospy
   sensor_msgs
