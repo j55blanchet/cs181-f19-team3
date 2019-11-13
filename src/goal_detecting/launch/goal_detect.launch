@@ -1,0 +1,20 @@
+<launch>
+        <!-- Nodes -->
+        <node name="find_object_3d" pkg="find_object_2d" type="find_object_2d" output="screen">
+                <!-- remap from="image" to="image_raw"/ -->
+                <param name="gui" value="true" type="bool"/>
+		<param name="session_path" value="$(find goal_detecting)/goal.bin" type="str"/>
+		
+		<remap from="rgb/image_rect_color" to="camera/rgb/image_rect_color"/>
+                <remap from="depth_registered/image_raw" to="camera/depth_registered/image_raw"/>
+                <remap from="depth_registered/camera_info" to="camera/depth_registered/camera_info"/>
+        </node>
+	<node name="tf_example" pkg="find_object_2d" type="tf_example" output="screen">
+                <param name="object_prefix" value="object" type="str"/>
+        </node>
+        <!-- fake some tf frames for the example /map -> /odom -> /base_link -> /camera_link -->
+        <node pkg="tf" type="static_transform_publisher" name="base_to_camera_tf"
+                args="-0.03 0.0 0.18 0.0 0.0 0.0 /base_link /camera_link 100" />
+
+</launch>
+       
