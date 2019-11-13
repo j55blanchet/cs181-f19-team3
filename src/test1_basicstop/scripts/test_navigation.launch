@@ -34,8 +34,8 @@
     </node>
 
     <!-- Used to publish pose of robot as a tf -->
-    <!--node if="$(arg use_rosbot)" pkg="treasure-retriever" type="pose_to_tf.py" name="post_to_tf"/-->
-
+    <node if="$(arg use_rosbot)" pkg="treasure-retriever" type="pose_to_tf.py" name="post_to_tf"/>
+    <node if="$(arg use_rosbot)" pkg="test1_basicstop" type="test_tf.py" name="pose_to_tf"/>
     <!-- Allows for keyboard control of robot -->
     <node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" name="teleop_twist_keyboard" output="screen"/>
 
