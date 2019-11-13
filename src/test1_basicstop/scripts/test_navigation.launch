@@ -23,7 +23,7 @@
     <node if="$(arg use_rosbot)" pkg="tf" type="static_transform_publisher" name="laser_tf_broadcaster" args="0 0 0 3.14 0 0 base_link laser_frame 100" />
 
     <!-- Transform for getting the Camera tf in place and camera clipping node for depth -->
-    <node if="$(arg use_robot)" pkg="tf" type="static_transform_publisher" name="ROSbot_camera" args="-0.04 0 0.15 0 0 0 base_link camera_link 10" />
+    <node if="$(arg use_rosbot)" pkg="tf" type="static_transform_publisher" name="ROSbot_camera" args="-0.04 0 0.15 0 0 0 base_link camera_link 10" />
     <node if="$(arg use_rosbot)" pkg="husarion_ros" type="depth_clipping_node" name="depth_clipping_node"/>
 
     <node if="$(arg use_rosbot)" pkg="husarion_ros" type="serial_bridge.sh" name="odometry_serial_bridge"/>
