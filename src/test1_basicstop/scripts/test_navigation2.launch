@@ -1,0 +1,44 @@
+<launch>
+
+    <arg name="use_rosbot" default="true"/>
+    <arg name="use_gazebo" default="false"/>
+
+    <node pkg="gmapping" type="slam_gmapping" name='gmapping_node' output='log'>
+        <param name="base_frame" value="base_link"/>
+        <param name="odom_frame" value="odom"/>
+        <param name="delta" value="0.01"/>
+        <param name="xmin" value="-5"/>
+        <param name="ymin" value="-5"/>
+        <param name="xmax" value="5"/>
+        <param name="ymax" value="5"/>
+        <param name="maxUrange" value="5"/>
+        <param name="map_update_interval" value="1"/>
+        <param name="linearUpdate" value="0.05"/>
+        <param name="angularUpdate" value="0.05"/>
+        <param name="temporalUpdate" value="0.1"/>
+        <param name="particles" value="100"/>
+    </node>
+
+    <!-- Transform for getting the lidar tf in place -->
+    <node if="$(arg use_rosbot)" pkg="tf" type="static_transform_publisher" name="laser_tf_broadcaster" args="0 0 0 3.14 0 0 base_link laser_frame 100" />
+
+    <node if="$(arg use_rosbot)" pkg="husarion_ros" type="serial_bridge.sh" name="odometry_serial_bridge"/>
+
+    <!-- If running in gazebo, start gazebo environment -->
+    <include if="$(arg use_gazebo)" file="$(find rosbot_gazebo)/launch/maze_world.launch"/>
+    <include if="$(arg use_gazebo)" file="$(find rosbot_gazebo)/launch/rosbot.launch"/>
+
+    <node if="$(arg use_rosbot)" pkg="rplidar_ros" type="rplidarNode" name="rplidar">
+        <param name="angle_compensate" type="bool" value="true"/>
+        <param name="serial_baudrate" type="int" value="115200"/><!--model A2 (ROSbot 2.0) -->
+    </node>
+
+    <!-- Used to publish pose of robot as a tf -->
+    <node if="$(arg use_rosbot)" pkg="treasure-retriever" type="pose_to_tf.py" name="post_to_tf"/>
+
+    <!-- Allows for keyboard control of robot -->
+    <node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" name="teleop_twist_keyboard" output="screen"/>
+
+    <!-- <node pkg="rviz" type="rviz" name="rviz"/> -->
+
+</launch>
