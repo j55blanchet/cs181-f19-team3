@@ -43,7 +43,7 @@
 
 
     <!-- loading the husarion_rosbot_description -->
-    <rosparam command="load" file="$(find test1_basicstop)/joint_state_controller.yaml"/>
+    <rosparam command="load" file= "$~/catkin_ws/src/test1_basic_stop/joint_state_controller.yaml"/>
     <node name="joint_state_controller_spawner" pkg="controller_manager" type="spawner" output="screen" args="joint_state_controller"/>
     <param name="robot_description" command="$(find xacro)/xacro.py '$(find rosbot_description)/urdf/rosbot.xacro'"/>
     <node name="rosbot_spawn" pkg="gazebo_ros" type="spawn_model" output="screen" args="-urdf -param robot_description -model rosbot"/>
