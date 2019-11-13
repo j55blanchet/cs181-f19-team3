@@ -41,14 +41,6 @@
 
     <!-- <node pkg="rviz" type="rviz" name="rviz"/> -->
 
-
-    <!-- loading the husarion_rosbot_description -->
-    <rosparam command="load" file= "$~/catkin_ws/src/test1_basic_stop/joint_state_controller.yaml"/>
-    <node name="joint_state_controller_spawner" pkg="controller_manager" type="spawner" output="screen" args="joint_state_controller"/>
-    <param name="robot_description" command="$(find xacro)/xacro.py '$(find rosbot_description)/urdf/rosbot.xacro'"/>
-    <node name="rosbot_spawn" pkg="gazebo_ros" type="spawn_model" output="screen" args="-urdf -param robot_description -model rosbot"/>
-    <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher"/>
-
     <!-- Map server -->
     <arg name="map_file" default="$(find rosbot_navigation)/maps/map.yaml"/>
     <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"/>
