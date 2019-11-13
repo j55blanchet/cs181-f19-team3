@@ -5,9 +5,10 @@
 import rospy
 from geometry_msgs.msg import Vector3, PoseStamped, Quaternion, Transform, Pose
 from tf import TransformBroadcaster
+from nav_msgs.msg import Odometry
 
 def main():
-    rospy.init_node("pose_to_tf")
+    rospy.init_node("pose_to_tf2")
 
     tf_broadcaster = TransformBroadcaster()
 
