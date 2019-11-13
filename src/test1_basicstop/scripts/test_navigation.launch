@@ -22,6 +22,10 @@
     <!-- Transform for getting the lidar tf in place -->
     <node if="$(arg use_rosbot)" pkg="tf" type="static_transform_publisher" name="laser_tf_broadcaster" args="0 0 0 3.14 0 0 base_link laser_frame 100" />
 
+    <!-- Transform for getting the Camera tf in place and camera clipping node for depth -->
+    <node if="$(arg use_robot)" pkg="tf" type="static_transform_publisher" name="ROSbot_camera" args="-0.04 0 0.15 0 0 0 base_link camera_link 10" />
+    <node pkg="husarion_ros" type="depth_clipping_node" name="depth_clipping_node"/>
+
     <node if="$(arg use_rosbot)" pkg="husarion_ros" type="serial_bridge.sh" name="odometry_serial_bridge"/>
 
     <!-- If running in gazebo, start gazebo environment -->
@@ -36,13 +40,16 @@
     <!-- Used to publish pose of robot as a tf -->
     <!--node if="$(arg use_rosbot)" pkg="treasure-retriever" type="pose_to_tf.py" name="pose_to_tf"/-->
     <!--node if="$(arg use_rosbot)" pkg="test1_basicstop" type="test_tf.py" name="pose_to_tf2"/-->
+    <node pkg="rosbot_webui" type="pose_to_tf_transform" name="pose_to_tf_transform" required="true"/>
+    <node pkg="rosbot_webui" type="tf_to_pose" name="tf_to_pose" required="true" output="screen" />
+
     <!-- Allows for keyboard control of robot -->
     <node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" name="teleop_twist_keyboard" output="screen"/>
     <include if="$(arg use_rosbot)" file="$(find rosbot_description)/launch/rosbot_gazebo.launch"/>
     <!-- <node pkg="rviz" type="rviz" name="rviz"/> -->
 
     <!-- Map server -->
-    <arg name="map_file" default="$(find rosbot_navigation)/maps/test_map.yaml"/>
+    <arg name="map_file" default="$(find rosbot_navigation)/maps/map.yaml"/>
     <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"/>
 
     <!-- Localization -->
@@ -63,9 +70,6 @@
     <rosparam file="$(find rosbot_navigation)/config/local_costmap_params.yaml" command="load"/>
     <rosparam file="$(find rosbot_navigation)/config/global_costmap_params.yaml" command="load"/>
     <rosparam file="$(find rosbot_navigation)/config/trajectory_planner.yaml" command="load"/>
-    <remap from="cmd_vel" to="cmd_vel"/>
-    <remap from="odom" to="odom"/>
-    <remap from="scan" to="/scan"/>
     <param name="move_base/DWAPlannerROS/yaw_goal_tolerance" value="1.0"/>
     <param name="move_base/DWAPlannerROS/xy_goal_tolerance" value="1.0"/>
     </node>
