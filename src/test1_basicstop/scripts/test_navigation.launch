@@ -40,6 +40,12 @@
     <node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" name="teleop_twist_keyboard" output="screen"/>
 
     <!-- <node pkg="rviz" type="rviz" name="rviz"/> -->
+
+    <master auto="start"/>
+    <!-- Map server -->
+    <arg name="map_file" default="$(find rosbot_navigation)/maps/map.yaml"/>
+    <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"/>
+
     <!-- Localization -->
     <node pkg="amcl" type="amcl" name="amcl" output="screen">
     <remap from="scan" to="/scan"/>
@@ -64,5 +70,5 @@
     <param name="move_base/DWAPlannerROS/yaw_goal_tolerance" value="1.0"/>
     <param name="move_base/DWAPlannerROS/xy_goal_tolerance" value="1.0"/>
     </node>
-    
+
 </launch>
