@@ -14,7 +14,7 @@ LIN_VEL = 0.3 # linear velocity
 TURN_VEL = 0.3 # angular velocity only in case of evacuation
 SAFETY_THRESHOLD = 0.6 # wall distance for following
 DURATION_STOP = 3
-DURATION_FWD = 5
+DURATION_FWD = 7
 
 class WanderingRobot:
     def __init__(self):
