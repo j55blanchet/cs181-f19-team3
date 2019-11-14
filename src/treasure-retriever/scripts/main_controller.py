@@ -1,5 +1,7 @@
 #!/usr/bin/env python
+import os
 import rospy
+import roslaunch
 from geometry_msgs.msg import Twist
 # from grid_map_msgs.msg import GridMap
 
@@ -18,10 +20,13 @@ class MainController:
         self.action_seq = 0
         self.cmd_pub = rospy.Publisher("cmd_vel", Twist, queue_size=0)
         self.init_time = rospy.Time.now()
+
+        self.map_saver_process = None
     
     def perform_action(self):
 
-        rospy.loginfo("Action % 6d State %d" % (self.action_seq, self.state))
+        map_saver_status = "N/A" if self.map_saver_process is None else str(self.map_saver_process.is_alive())
+        rospy.loginfo("Action % 6d State %d MapSaver %s" % (self.action_seq, self.state, map_saver_status))
         self.action_seq += 1
 
         cmd_vel = Twist()
@@ -33,6 +38,7 @@ class MainController:
 
             if self.mapping_complete():
                 self.state = State.FETCH_TREASURE
+                self.save_map()
                 return
             
             cmd_vel.linear.x = 0.1
@@ -66,8 +72,20 @@ class MainController:
 
     def save_map(self):
         rospy.loginfo("Saving map")
+
+        map_save_file_path = os.environ['MAP_SAVE_FILE']
+        package = "map_server"
+        executable = "map_saver"
+        node = roslaunch.core.Node(
+            package=package, 
+            node_type=executable,
+            args="-f %s" % map_save_file_path)
+    
+        launch = roslaunch.scriptapi.ROSLaunch()
+        launch.start()
+
         # rosrun map_server map_saver -f ~/test_map
-        pass
+        self.map_saver_process = launch.launch(node)
 
 
 

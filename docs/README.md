@@ -22,6 +22,7 @@ Team 3 | CS 181 | Fall 2019
 1. Setup RVIZ connection so you can visualize robot from local machine
     * ROS_IP should be set to wired default of `192.168.0.1` - check `~/.bashrc` on the robot to ensure it's what you want.
     * On local machine you should set `ROS_IP` and `ROS_MASTER_URI` accordingly.
+1. Run `source prepare.bash` (root of workspace)
 
 ## System Architecture
 

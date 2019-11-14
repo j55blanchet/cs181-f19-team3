@@ -43,5 +43,4 @@
     <!-- <node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" name="teleop_twist_keyboard" output="screen"/> -->
 
     <node pkg="treasure-retriever" type="main_controller.py" name="main_controller" />
-    
 </launch>
