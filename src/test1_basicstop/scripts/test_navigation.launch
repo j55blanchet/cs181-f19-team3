@@ -46,12 +46,21 @@
 
     <!-- Allows for keyboard control of robot -->
     <node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" name="teleop_twist_keyboard" output="screen"/>
-    <include if="$(arg use_rosbot)" file="$(find rosbot_description)/launch/rosbot_gazebo.launch"/>
+    <include if="$(arg use_rosbot)" file="$(find rosbot_description)/launch/rosbot_specification.launch"/>
     <!-- <node pkg="rviz" type="rviz" name="rviz"/> -->
 
     <!-- Map server -->
     <!-- arg name="map_file" default="$(find rosbot_navigation)/maps/map.yaml"/>
     <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"/-->
+    <node pkg="husarion_ros" type="map_to_img_node" name="map_to_img" output="screen">
+        <param name="tile_width" value="640"/>
+        <param name="tile_height" value="480"/>
+        <param name="parent_frame" value="/map"/>
+        <param name="child_frame" value="/base_link"/>
+        <param name="draw_robot" value="true"/>
+        <param name="publish_full_map" value="false"/>
+        <param name="publish_map_tile" value="true"/>
+    </node>
 
     <!-- Localization -->
     <node pkg="amcl" type="amcl" name="amcl" output="screen">
