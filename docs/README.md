@@ -19,6 +19,25 @@ Team 3 | CS 181 | Fall 2019
 
 ## System Architecture
 
+Hardware Control Nodes
+* `serial_bridge.sh`: for odometry
+* `rpilidarNode`: operates lidar 
+
+Third Party Components
+* `map_server map_server`: loads a saved map and publishes it to `/map`
+* `map_server map_saver`: reads from `/map` and publishes to a map file
+* `amcl`: performs localization using Monte Carlo / particle filter. Unsure if it works with dynamic map or requires a map file
+* `move_base`: performs path planning using DWA algorithm.
+* `gmapping`: TBD
+
+Utility Nodes
+* `static_transform_publisher`: used to publish transforms for lidar sensor and camera
+* `pose_to_tf_transform`: publishes `base_link` frame with respect to `odom`
+* `tf_to_pose`: used create pose from `map` to `base_link` for visualization purposes
+
+Business Logic Nodes
+* `main_controller.py`: contains FSM that controls other nodes and performs map saving / loading, etc.
+
 ### Used Packages
 
 Here's a list of packages we used in our project, along with a description of what each one was used for.
