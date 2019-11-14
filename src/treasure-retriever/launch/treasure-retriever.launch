@@ -24,6 +24,9 @@
     
     <node if="$(arg use_rosbot)" pkg="husarion_ros" type="serial_bridge.sh" name="odometry_serial_bridge"/>
 
+    <!-- Include robot description so we can see it in rviz & so that the tf hierarchy is correct -->
+    <include if="$(arg use_rosbot)" file="$(find treasure-retriever)/launch/rosbot_specification.launch"/>
+
     <!-- If running in gazebo, start gazebo environment -->
     <include if="$(arg use_gazebo)" file="$(find rosbot_gazebo)/launch/maze_world.launch"/>
     <include if="$(arg use_gazebo)" file="$(find rosbot_gazebo)/launch/rosbot.launch"/>
