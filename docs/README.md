@@ -10,12 +10,18 @@ Team 3 | CS 181 | Fall 2019
 1. `git submodule init` 
 1. `git submodule update`
 
-1. Install packages
+1. Install packages (NOTE: THIS MIGHT NOT BE NECESSARY)
     * `sudo apt-get install -y ros-kinetic-ar-track-alvar ros-kinetic-depthimage-to-laserscan ros-kinetic-find-object-2d ros-kinetic-frontier-exploration ros-kinetic-gmapping ros-kinetic-grid-map`
 
 1. If you plan on using Gazebo simulations, run: `rosdep install --from-paths src --ignore-src -r -y`
 
 1. Run `catkin_make` in repo base
+
+### Running
+1. SSH into rosbot, run git pull to get latest code
+1. Setup RVIZ connection so you can visualize robot from local machine
+    * ROS_IP should be set to wired default of `192.168.0.1` - check `~/.bashrc` on the robot to ensure it's what you want.
+    * On local machine you should set `ROS_IP` and `ROS_MASTER_URI` accordingly.
 
 ## System Architecture
 

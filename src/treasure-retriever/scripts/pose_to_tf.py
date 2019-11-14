@@ -15,11 +15,6 @@ def main():
 
         pose = msg.pose
         q = pose.orientation
-        # q = Quaternion()
-        # q.x = pose.orientation.x
-        # q.y = pose.orientation.y
-        # q.z = pose.orientation.z
-        # q.w = pose.orientation.w
 
         tf_broadcaster.sendTransform(
             translation=(pose.position.x, pose.position.y, 0),
