@@ -8,9 +8,11 @@ from geometry_msgs.msg import Twist
 class State:
     INIT = 0
     SEARCH_OBJECTIVES = 1
-    FETCH_TREASURE = 2
-    DELIVER_TREASURE = 3
-    DONE = 4
+    SAVE_MAP = 2
+    LOAD_MAP = 3
+    FETCH_TREASURE = 4
+    DELIVER_TREASURE = 5
+    DONE = 6
 
 class MainController:
     
@@ -22,28 +24,43 @@ class MainController:
         self.init_time = rospy.Time.now()
 
         self.map_saver_process = None
+        self.map_server_process = None
     
     def perform_action(self):
-
-        map_saver_status = "N/A" if self.map_saver_process is None else str(self.map_saver_process.is_alive())
-        rospy.loginfo("Action % 6d State %d MapSaver %s" % (self.action_seq, self.state, map_saver_status))
         self.action_seq += 1
 
         cmd_vel = Twist()
 
         if self.state is State.INIT:
+            rospy.loginfo("Starting objective search")
             self.state = State.SEARCH_OBJECTIVES
 
         elif self.state is State.SEARCH_OBJECTIVES:
 
             if self.mapping_complete():
-                self.state = State.FETCH_TREASURE
+                rospy.loginfo("Mapping complete! Saving map")
+                self.state = State.SAVE_MAP
                 self.save_map()
                 return
             
-            cmd_vel.linear.x = 0.1
-            cmd_vel.angular.z = 0.3
-            
+            # cmd_vel.linear.x = 0.1
+            # cmd_vel.angular.z = 0.1
+
+        elif self.state is State.SAVE_MAP:
+
+            if self.map_saver_process is not None and not self.map_saver_process.is_alive():
+                
+                # TODO: Find a better way to detect when the map is complete
+                rospy.loginfo("Map saving complete")
+                self.start_map_server()
+                self.state = State.LOAD_MAP
+        
+        elif self.state is State.LOAD_MAP:
+            # TODO: detect when map is loaded and switch to FETCH_TREASURE
+            if self.map_server_process is not None and self.map_server_process.is_alive():
+
+                # Switch to FETCH_TREASURE
+                self.state = State.FETCH_TREASURE
 
         elif self.state is State.FETCH_TREASURE:
             # TODO:
@@ -87,7 +104,23 @@ class MainController:
         # rosrun map_server map_saver -f ~/test_map
         self.map_saver_process = launch.launch(node)
 
+    def start_map_server(self):
+        rospy.loginfo("Loading map")
 
+        map_save_file_path = os.environ['MAP_SAVE_FILE']
+        map_save_file_path += ".yaml"
+        package = "map_server"
+        executable = "map_server"
+        node = roslaunch.core.Node(
+            package=package, 
+            node_type=executable,
+            args=map_save_file_path)
+    
+        launch = roslaunch.scriptapi.ROSLaunch()
+        launch.start()
+
+        # rosrun map_server map_saver -f ~/test_map
+        self.map_server_process = launch.launch(node)
 
 def main():
     rospy.init_node("main_controller")
