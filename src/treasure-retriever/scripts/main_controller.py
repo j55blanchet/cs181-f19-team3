@@ -36,6 +36,8 @@ class MainController:
 
         cmd_vel = Twist()
 
+        rospy.loginfo_throttle(1, "[%04d] State: %s" % (self.action_seq, str(self.state)))
+
         if self.state is State.INIT:
             rospy.loginfo("Starting objective search")
             self.state = State.SEARCH_OBJECTIVES
@@ -90,7 +92,7 @@ class MainController:
             self.rate.sleep()
 
     def mapping_is_complete(self):
-        return self.treasure_pose is not None
+        return self.treasure_pose is not None and self.goalzone_pose is not None
 
     def save_map(self):
         rospy.loginfo("Saving map")
@@ -136,14 +138,18 @@ class MainController:
 
             # Note: tag ids TBD
             if marker.id is 0:
+                if self.treasure_pose is None:
+                    rospy.loginfo("Located treasure")
                 self.treasure_pose = marker.pose
                 
+                # ar_tag_sub.publich(marker.pose)
             
-            elif marker.id is 1:
+            elif marker.id is 9:
+                if self.goalzone_pose is None:
+                    rospy.loginfo("Located goal zone")    
                 self.goalzone_pose = marker.pose
 
-            else:
-                rospy.logwarning("AR Tag recognized with unknown id %d" % marker.id)
+            
             # id = self.marker.id
             # position = marker.pose.pose.position #Pose
             # orientation = self.marker.pose.pose.orientation #Quaternion

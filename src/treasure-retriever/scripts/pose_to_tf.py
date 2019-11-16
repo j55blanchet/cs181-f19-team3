@@ -16,6 +16,8 @@ def main():
         pose = msg.pose
         q = pose.orientation
 
+        rospy.loginfo_throttle(10, "Updating tf from odom to base_link")
+
         tf_broadcaster.sendTransform(
             translation=(pose.position.x, pose.position.y, 0),
             rotation=(q.x, q.y, q.z, q.w),
