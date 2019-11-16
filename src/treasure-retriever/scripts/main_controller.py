@@ -3,6 +3,7 @@ import os
 import rospy
 import roslaunch
 from geometry_msgs.msg import Twist
+from ar_track_alvar_msgs.msg import AlvarMarkers
 # from grid_map_msgs.msg import GridMap
 
 class State:
@@ -18,13 +19,17 @@ class MainController:
     
     def __init__(self):
         self.state = State.INIT
-        self.rate = rospy.Rate(30)
+        self.rate = rospy.Rate(10)
         self.action_seq = 0
         self.cmd_pub = rospy.Publisher("cmd_vel", Twist, queue_size=0)
+        self.ar_tag_sub = rospy.Subscriber("/ar_pose_marker", AlvarMarkers, self.ar_callback, queue_size=1)
         self.init_time = rospy.Time.now()
 
         self.map_saver_process = None
         self.map_server_process = None
+
+        self.goalzone_pose = None
+        self.treasure_pose = None
     
     def perform_action(self):
         self.action_seq += 1
@@ -37,7 +42,7 @@ class MainController:
 
         elif self.state is State.SEARCH_OBJECTIVES:
 
-            if self.mapping_complete():
+            if self.mapping_is_complete():
                 rospy.loginfo("Mapping complete! Saving map")
                 self.state = State.SAVE_MAP
                 self.save_map()
@@ -58,8 +63,8 @@ class MainController:
         elif self.state is State.LOAD_MAP:
             # TODO: detect when map is loaded and switch to FETCH_TREASURE
             if self.map_server_process is not None and self.map_server_process.is_alive():
-
                 # Switch to FETCH_TREASURE
+                rospy.loginfo("Map loading complete")
                 self.state = State.FETCH_TREASURE
 
         elif self.state is State.FETCH_TREASURE:
@@ -84,8 +89,8 @@ class MainController:
             self.perform_action()
             self.rate.sleep()
 
-    def mapping_complete(self):
-        return rospy.Time.now().secs - self.init_time.secs > 10
+    def mapping_is_complete(self):
+        return self.treasure_pose is not None
 
     def save_map(self):
         rospy.loginfo("Saving map")
@@ -121,6 +126,27 @@ class MainController:
 
         # rosrun map_server map_saver -f ~/test_map
         self.map_server_process = launch.launch(node)
+    
+    def ar_callback(self, msg):
+        if msg.markers:
+            artag_exist = True
+            marker = msg.markers[0]
+
+            rospy.logdebug("Marker found with id %d" % marker.id)
+
+            # Note: tag ids TBD
+            if marker.id is 0:
+                self.treasure_pose = marker.pose
+                
+            
+            elif marker.id is 1:
+                self.goalzone_pose = marker.pose
+
+            else:
+                rospy.logwarning("AR Tag recognized with unknown id %d" % marker.id)
+            # id = self.marker.id
+            # position = marker.pose.pose.position #Pose
+            # orientation = self.marker.pose.pose.orientation #Quaternion
 
 def main():
     rospy.init_node("main_controller")
