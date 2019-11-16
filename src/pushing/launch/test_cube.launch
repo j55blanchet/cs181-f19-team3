@@ -1,4 +1,7 @@
 <launch>
+
+  <include file="$(find astra_launch)/launch/astra.launch"/>
+
   <arg name="marker_size" default="8.0" />
   <arg name="max_new_marker_error" default="0.05" />
   <arg name="max_track_error" default="0.05" />

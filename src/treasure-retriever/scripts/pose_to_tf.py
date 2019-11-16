@@ -15,18 +15,13 @@ def main():
 
         pose = msg.pose
         q = pose.orientation
-        # q = Quaternion()
-        # q.x = pose.orientation.x
-        # q.y = pose.orientation.y
-        # q.z = pose.orientation.z
-        # q.w = pose.orientation.w
 
         tf_broadcaster.sendTransform(
             translation=(pose.position.x, pose.position.y, 0),
             rotation=(q.x, q.y, q.z, q.w),
             time=rospy.Time.now(), 
-            child="odom",
-            parent="base_link")
+            child="base_link",
+            parent="odom")
 
     rospy.Subscriber("/pose", PoseStamped, pose_callback, queue_size=1)
     rospy.spin()
