@@ -3,6 +3,12 @@
     <arg name="use_rosbot" default="true"/>
     <arg name="use_gazebo" default="false"/>
 
+
+    <node pkg="rosserial_python" type="serial_node.py" name="robby_node">
+        <param name="port" value="/dev/serial0" />
+        <param name="baud" value="500000" />
+    </node>
+
     <node pkg="gmapping" type="slam_gmapping" name='gmapping_node' output='log'>
         <param name="base_frame" value="base_link"/>
         <param name="odom_frame" value="odom"/>
