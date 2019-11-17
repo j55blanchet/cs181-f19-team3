@@ -48,7 +48,7 @@
     <node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" name="teleop_twist_keyboard" output="screen"/>
 
     <!-- loading the robot's specification to show feature on rviz -->
-    <include if="$(arg use_rosbot)" file="$(find rosbot_description)/launch/rosbot_specification.launch"/>
+    <include if="$(arg use_rosbot)" file="$(find rosbot_description)/launch/rosbot_gazebo.launch"/>
     <!-- <node pkg="rviz" type="rviz" name="rviz"/> -->
 
     <!-- Map server -->
