@@ -2,12 +2,7 @@
 
     <arg name="use_rosbot" default="true"/>
     <arg name="use_gazebo" default="false"/>
-    
-    <arg name="port"  default="/dev/ttyACM0" />
-    <node name="serial_node" pkg="rosserial_python" type="serial_node.py">
-            <param name="port" value="$(arg port)"/>
-            <param name="baud" value="57600" />
-    </node>
+
 
     <node pkg="gmapping" type="slam_gmapping" name='gmapping_node' output='log'>
         <param name="base_frame" value="base_link"/>
@@ -32,8 +27,9 @@
     <node if="$(arg use_rosbot)" pkg="tf" type="static_transform_publisher" name="ROSbot_camera" args="-0.04 0 0.15 0 0 0 base_link camera_link 10" />
     <node if="$(arg use_rosbot)" pkg="husarion_ros" type="depth_clipping_node" name="depth_clipping_node"/>
 
-    <node if="$(arg use_rosbot)" pkg="husarion_ros" type="serial_bridge.sh" name="odometry_serial_bridge"/>
-
+    <!--node if="$(arg use_rosbot)" pkg="husarion_ros" type="serial_bridge.sh" name="odometry_serial_bridge"/-->
+    <include file="$(find rosbot_ekf)/launch/all.launch" />
+    
     <!-- If running in gazebo, start gazebo environment -->
     <include if="$(arg use_gazebo)" file="$(find rosbot_gazebo)/launch/rosbot_world.launch"/>
     <include if="$(arg use_gazebo)" file="$(find rosbot_description)/launch/rosbot_gazebo.launch"/>
