@@ -161,8 +161,6 @@ class MainController:
             return
 
         marker_ids = [str(m.id) for m in msg.markers]
-
-        
         rospy.logdebug("Markers found: %s" % ", ".join(marker_ids))
 
         for marker in msg.markers:
@@ -178,7 +176,7 @@ class MainController:
 
     def visualize_info(self):
         if self.goalzone_pose is not None:
-            print "Visualizing GoalZone"
+            rospy.logdebug("Visualizing GoalZone")
             marker = Marker(
                 type=Marker.SPHERE,
                 action=Marker.ADD,
@@ -194,7 +192,7 @@ class MainController:
             self.visualizations_pub.publish(marker)
         
         if self.treasure_pose is not None:
-            print "Visualizing Treasure"
+            rospy.logdebug("Visualizing Treasure")
             marker = Marker(
                 type=Marker.SPHERE,
                 action=Marker.ADD,
@@ -208,7 +206,6 @@ class MainController:
                 text="Treasure Cube"
             )
             self.visualizations_pub.publish(marker)
-        #     PoseStamped()
 
 def main():
     rospy.init_node("main_controller")
