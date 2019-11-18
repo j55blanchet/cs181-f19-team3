@@ -13,11 +13,9 @@ from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 class State:
     INIT = 0
     SEARCH_OBJECTIVES = 1
-    SAVE_MAP = 2
-    LOAD_MAP = 3
-    FETCH_TREASURE = 4
-    DELIVER_TREASURE = 5
-    DONE = 6
+    FETCH_TREASURE = 2
+    DELIVER_TREASURE = 3
+    DONE = 4
 
 class MarkerIds:
     GOAL_ZONE = 0
@@ -38,6 +36,8 @@ class MainController:
         self.visualizations_pub = rospy.Publisher("/visualization_marker", Marker, queue_size=1)
         self.init_time = rospy.Time.now()
 
+        self.launcher = roslaunch.scriptapi.ROSLaunch()
+        self.launcher.start()
         self.map_saver_process = None
         self.map_server_process = None
         self.keyboard_teleop_process = None
@@ -65,26 +65,9 @@ class MainController:
                 # stop robot at current position
                 self.cmd_pub.publish(Twist())
 
-                # rospy.loginfo("Saving map")
                 self.state = State.FETCH_TREASURE
-                self.save_map()
                 return
             
-        elif self.state is State.SAVE_MAP:
-
-            if self.map_saver_process is not None and not self.map_saver_process.is_alive():
-                
-                # TODO: Find a better way to detect when the map is complete
-                rospy.loginfo("Map saving complete")
-                self.start_map_server()
-                self.state = State.LOAD_MAP
-        
-        elif self.state is State.LOAD_MAP:
-            if self.map_server_process is not None and self.map_server_process.is_alive():
-                # Switch to FETCH_TREASURE
-                rospy.loginfo("Map loading complete")
-                self.state = State.FETCH_TREASURE
-
         elif self.state is State.FETCH_TREASURE:
             if self.goto_pose(self.treasure_pose):
                 self.state = State.DELIVER_TREASURE
@@ -117,7 +100,6 @@ class MainController:
         goal = MoveBaseGoal()
         rospy.loginfo("Target pose: %s", str(pose))
         goal.target_pose.header.frame_id = "map"
-        # rospy.loginfo("Source frame_id = %s", str(self.treasure_pose.header.frame_id))
         goal.target_pose.header.stamp = rospy.Time.now()
 
         goal.target_pose.pose.position = pose.pose.position
@@ -139,24 +121,8 @@ class MainController:
             package=package, 
             node_type=executable,
             args=args)
-        launch = roslaunch.scriptapi.ROSLaunch()
-        launch.start()
-        return launch.launch(node)
-
-    def save_map(self):
-        rospy.loginfo("Saving map")
-
-        # rosrun map_server map_saver -f ~/test_map
-        self.map_saver_process = self.start_node("map_server", "map_saver", "-f %s" % map_save_file)
-
-    def start_map_server(self):
-        rospy.loginfo("Loading map")
-
-        map_save_file_path = map_save_file
-        map_save_file_path += ".yaml"
-
-        # rosrun map_server map_saver -f ~/test_map
-        self.map_server_process = self.start_node("map_server", "map_server", map_save_file_path)
+        
+        return self.launcher.launch(node)
     
     def ar_callback(self, msg):
         if not msg.markers:

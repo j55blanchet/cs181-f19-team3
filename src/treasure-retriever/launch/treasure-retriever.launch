@@ -39,36 +39,27 @@
     <!-- Used to publish pose of robot as a tf -->
     <node if="$(arg use_rosbot)" pkg="treasure-retriever" type="pose_to_tf.py" name="pose_to_tf"/>
 
-    <!-- Allows for keyboard control of robot -->
-    <!-- <node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" name="teleop_twist_keyboard" output="screen"/> -->
-
-    <node pkg="treasure-retriever" type="main_controller.py" name="main_controller" output="screen" />
-
-    <!-- AR Detection Feature Nodes -->
     <!-- Starts camera -->
     <include file="$(find astra_launch)/launch/astra.launch"/>
-    
+    <node name="base_to_camera_tf" pkg="tf" type="static_transform_publisher" args="-0.03 0.0 0.18 0 0 0 /base_link /camera_link 100" />
+
+    <!-- AR Detection Feature Nodes -->
     <arg name="marker_size" default="8.0" />
     <arg name="max_new_marker_error" default="0.05" />
     <arg name="max_track_error" default="0.05" />
-
     <arg name="cam_image_topic"      default="/camera/rgb/image_raw" />
     <arg name="cam_info_topic"       default="/camera/rgb/camera_info" />
-
     <arg name="output_frame"         default="/base_link" />
     <arg name="bundle_files" default="$(find pushing)/bundles/tags0_5.xml $(find pushing)/bundles/tags6_11.xml"/>
-
     <node name="ar_track_alvar" pkg="ar_track_alvar" type="findMarkerBundlesNoKinect" respawn="false" output="screen" args="$(arg marker_size) $(arg max_new_marker_error) $(arg max_track_error) $(arg cam_image_topic) $(arg cam_info_topic) $(arg output_frame) $(arg bundle_files)" />
-
-    <node name="base_to_camera_tf" pkg="tf" type="static_transform_publisher" args="-0.03 0.0 0.18 0 0 0 /base_link /camera_link 100" />
-
-
+    
+    <!-- Path Planning Node -->
     <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
         <rosparam file="$(find rosbot_navigation)/config/costmap_common_params.yaml" command="load" ns="global_costmap"/>
         <rosparam file="$(find rosbot_navigation)/config/costmap_common_params.yaml" command="load" ns="local_costmap"/>
         <rosparam file="$(find rosbot_navigation)/config/local_costmap_params.yaml" command="load"/>
         <rosparam file="$(find rosbot_navigation)/config/global_costmap_params.yaml" command="load"/>
-        <rosparam file="$(find rosbot_navigation)/config/trajectory_planner.yaml" command="load"/>
+        <rosparam file="$(find treasure-retriever)/config/trajectory_planner_alone.yaml" command="load"/>
         <param name="move_base/DWAPlannerROS/yaw_goal_tolerance" value="1.0"/>
         <param name="move_base/DWAPlannerROS/xy_goal_tolerance" value="1.0"/>
     </node>
