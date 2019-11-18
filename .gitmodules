@@ -4,6 +4,3 @@
 [submodule "src/rosbot_webui"]
 	path = src/rosbot_webui
 	url = https://github.com/husarion/rosbot_webui.git
-[submodule "src/rosbot_description"]
-	path = src/rosbot_description
-	url = https://github.com/husarion/rosbot_description.git
