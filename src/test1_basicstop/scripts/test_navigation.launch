@@ -22,11 +22,6 @@
 
     <!-- Transform for getting the lidar tf in place -->
     <node if="$(arg use_rosbot)" pkg="tf" type="static_transform_publisher" name="laser_tf_broadcaster" args="0 0 0 3.14 0 0 base_link laser_frame 100" />
-
-    <!-- Transform for getting the Camera tf in place and camera clipping node for depth -->
-    <node if="$(arg use_rosbot)" pkg="tf" type="static_transform_publisher" name="ROSbot_camera" args="-0.04 0 0.15 0 0 0 base_link camera_link 10" />
-    <node if="$(arg use_rosbot)" pkg="husarion_ros" type="depth_clipping_node" name="depth_clipping_node"/>
-
     <node if="$(arg use_rosbot)" pkg="husarion_ros" type="serial_bridge.sh" name="odometry_serial_bridge"/>
 
     <!-- If running in gazebo, start gazebo environment -->
@@ -58,24 +53,42 @@
 
     <!-- Localization -->
     <node pkg="amcl" type="amcl" name="amcl" output="screen">
-    <remap from="scan" to="/scan"/>
-    <param name="odom_frame_id" value="odom"/>
-    <param name="odom_model_type" value="diff-corrected"/>
-    <param name="base_frame_id" value="base_link"/>
-    <param name="update_min_d" value="0.1"/>
-    <param name="update_min_a" value="0.2"/>
-    <param name="min_particles" value="500"/>
+        <remap from="scan" to="/scan"/>
+        <param name="odom_frame_id" value="odom"/>
+        <param name="odom_model_type" value="diff-corrected"/>
+        <param name="base_frame_id" value="base_link"/>
+        <param name="update_min_d" value="0.1"/>
+        <param name="update_min_a" value="0.2"/>
+        <param name="min_particles" value="500"/>
     </node>
 
     <!-- Move base -->
     <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
-    <rosparam file="$(find rosbot_navigation)/config/costmap_common_params.yaml" command="load" ns="global_costmap"/>
-    <rosparam file="$(find rosbot_navigation)/config/costmap_common_params.yaml" command="load" ns="local_costmap"/>
-    <rosparam file="$(find rosbot_navigation)/config/local_costmap_params.yaml" command="load"/>
-    <rosparam file="$(find rosbot_navigation)/config/global_costmap_params.yaml" command="load"/>
-    <rosparam file="$(find rosbot_navigation)/config/trajectory_planner.yaml" command="load"/>
-    <param name="move_base/DWAPlannerROS/yaw_goal_tolerance" value="1.0"/>
-    <param name="move_base/DWAPlannerROS/xy_goal_tolerance" value="1.0"/>
+        <rosparam file="$(find rosbot_navigation)/config/costmap_common_params.yaml" command="load" ns="global_costmap"/>
+        <rosparam file="$(find rosbot_navigation)/config/costmap_common_params.yaml" command="load" ns="local_costmap"/>
+        <rosparam file="$(find rosbot_navigation)/config/local_costmap_params.yaml" command="load"/>
+        <rosparam file="$(find rosbot_navigation)/config/global_costmap_params.yaml" command="load"/>
+        <rosparam file="$(find rosbot_navigation)/config/trajectory_planner.yaml" command="load"/>
+        <param name="move_base/DWAPlannerROS/yaw_goal_tolerance" value="1.0"/>
+        <param name="move_base/DWAPlannerROS/xy_goal_tolerance" value="1.0"/>
     </node>
+
+    <!-- AR Detection Feature Nodes -->
+    <!-- Starts camera -->
+    <include file="$(find astra_launch)/launch/astra.launch"/>
+
+    <arg name="marker_size" default="8.0" />
+    <arg name="max_new_marker_error" default="0.05" />
+    <arg name="max_track_error" default="0.05" />
+
+    <arg name="cam_image_topic"      default="/camera/rgb/image_raw" />
+    <arg name="cam_info_topic"       default="/camera/rgb/camera_info" />
+
+    <arg name="output_frame"         default="/base_link" />
+    <arg name="bundle_files" default="$(find pushing)/bundles/tags0_5.xml $(find pushing)/bundles/tags6_11.xml"/>
+
+    <node name="ar_track_alvar" pkg="ar_track_alvar" type="findMarkerBundlesNoKinect" respawn="false" output="screen" args="$(arg marker_size) $(arg max_new_marker_error) $(arg max_track_error) $(arg cam_image_topic) $(arg cam_info_topic) $(arg output_frame) $(arg bundle_files)" />
+
+    <node name="base_to_camera_tf" pkg="tf" type="static_transform_publisher" args="-0.03 0.0 0.18 0 0 0 /base_link /camera_link 100" />
 
 </launch>
