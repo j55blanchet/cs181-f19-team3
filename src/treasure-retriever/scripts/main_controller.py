@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 import os
 import rospy
+import actionlib
 import roslaunch
 from std_msgs.msg import Header, ColorRGBA
-from geometry_msgs.msg import Twist, Vector3
+from geometry_msgs.msg import Twist, Vector3, Quaternion
 from ar_track_alvar_msgs.msg import AlvarMarkers
 from visualization_msgs.msg import Marker
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 # from grid_map_msgs.msg import GridMap
 
 class State:
@@ -34,6 +36,7 @@ class MainController:
 
         self.map_saver_process = None
         self.map_server_process = None
+        self.keyboard_teleop_process = None
 
         self.goalzone_pose = None
         self.treasure_pose = None
@@ -45,12 +48,20 @@ class MainController:
 
         if self.state is State.INIT:
             rospy.loginfo("Starting objective search")
+            self.keyboard_teleop_process = self.start_node("teleop_twist_keyboard", "teleop_twist_keyboard.py", "")
             self.state = State.SEARCH_OBJECTIVES
 
         elif self.state is State.SEARCH_OBJECTIVES:
 
             if self.mapping_is_complete():
-                rospy.loginfo("Mapping complete! Saving map")
+                rospy.loginfo("Mapping complete! Stopping teleop keyboard")
+
+                self.keyboard_teleop_process.stop()
+
+                # stop robot at current position
+                self.cmd_pub.publish(Twist())
+
+                rospy.loginfo("Saving map")
                 self.state = State.SAVE_MAP
                 self.save_map()
                 return
@@ -72,6 +83,7 @@ class MainController:
                 self.state = State.FETCH_TREASURE
 
         elif self.state is State.FETCH_TREASURE:
+            self.goto_treasure()
             # TODO:
             #    1) Determine target pose (far side of treasure pointing to goal zone)
             #    2) Get path to target pose
@@ -94,40 +106,55 @@ class MainController:
     def mapping_is_complete(self):
         return self.treasure_pose is not None and self.goalzone_pose is not None
 
+    def goto_treasure(self):
+        
+        # self.goalzone_pose
+        client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
+        client.wait_for_server()
+
+        goal = MoveBaseGoal()
+        rospy.loginfo("Treasure pose: %s", str(self.treasure_pose))
+        goal.target_pose.header.frame_id = "map"
+        # rospy.loginfo("Source frame_id = %s", str(self.treasure_pose.header.frame_id))
+        goal.target_pose.header.stamp = rospy.Time.now()
+
+        goal.target_pose.pose.position = self.treasure_pose.pose.position
+        goal.target_pose.pose.orientation = Quaternion(0, 0, 0, 1) #a no-rotation quaternion
+        client.send_goal(goal)
+
+        waiting = client.wait_for_result()
+
+        if not waiting:
+            rospy.logerr("Action server is not available")
+            rospy.signal_shutdwon("Action server not available")
+        else:
+            rospy.loginfo("Treasure seeking result" + str(client.get_result()))
+
+    def start_node(self, package, executable, args):
+        node = roslaunch.core.Node(
+            package=package, 
+            node_type=executable,
+            args=args)
+        launch = roslaunch.scriptapi.ROSLaunch()
+        launch.start()
+        return launch.launch(node)
+
     def save_map(self):
         rospy.loginfo("Saving map")
 
         map_save_file_path = os.environ['MAP_SAVE_FILE']
-        package = "map_server"
-        executable = "map_saver"
-        node = roslaunch.core.Node(
-            package=package, 
-            node_type=executable,
-            args="-f %s" % map_save_file_path)
-    
-        launch = roslaunch.scriptapi.ROSLaunch()
-        launch.start()
 
         # rosrun map_server map_saver -f ~/test_map
-        self.map_saver_process = launch.launch(node)
+        self.map_saver_process = self.start_node("map_server", "map_saver", "-f %s" % map_save_file_path)
 
     def start_map_server(self):
         rospy.loginfo("Loading map")
 
         map_save_file_path = os.environ['MAP_SAVE_FILE']
         map_save_file_path += ".yaml"
-        package = "map_server"
-        executable = "map_server"
-        node = roslaunch.core.Node(
-            package=package, 
-            node_type=executable,
-            args=map_save_file_path)
-    
-        launch = roslaunch.scriptapi.ROSLaunch()
-        launch.start()
 
         # rosrun map_server map_saver -f ~/test_map
-        self.map_server_process = launch.launch(node)
+        self.map_server_process = self.start_node("map_server", "map_server", map_save_file_path)
     
     def ar_callback(self, msg):
         if not msg.markers:
