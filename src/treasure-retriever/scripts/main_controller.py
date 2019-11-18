@@ -2,8 +2,10 @@
 import os
 import rospy
 import roslaunch
-from geometry_msgs.msg import Twist
+from std_msgs.msg import Header, ColorRGBA
+from geometry_msgs.msg import Twist, Vector3
 from ar_track_alvar_msgs.msg import AlvarMarkers
+from visualization_msgs.msg import Marker
 # from grid_map_msgs.msg import GridMap
 
 class State:
@@ -15,14 +17,19 @@ class State:
     DELIVER_TREASURE = 5
     DONE = 6
 
+class MarkerIds:
+    GOAL_ZONE = 0
+    TREASURE  = 1
+
 class MainController:
     
     def __init__(self):
         self.state = State.INIT
         self.rate = rospy.Rate(10)
         self.action_seq = 0
-        self.cmd_pub = rospy.Publisher("cmd_vel", Twist, queue_size=0)
+        self.cmd_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=0)
         self.ar_tag_sub = rospy.Subscriber("/ar_pose_marker", AlvarMarkers, self.ar_callback, queue_size=1)
+        self.visualizations_pub = rospy.Publisher("/visualization_marker", Marker, queue_size=1)
         self.init_time = rospy.Time.now()
 
         self.map_saver_process = None
@@ -33,8 +40,6 @@ class MainController:
     
     def perform_action(self):
         self.action_seq += 1
-
-        cmd_vel = Twist()
 
         rospy.loginfo_throttle(1, "[%04d] State: %s" % (self.action_seq, str(self.state)))
 
@@ -50,9 +55,6 @@ class MainController:
                 self.save_map()
                 return
             
-            # cmd_vel.linear.x = 0.1
-            # cmd_vel.angular.z = 0.1
-
         elif self.state is State.SAVE_MAP:
 
             if self.map_saver_process is not None and not self.map_saver_process.is_alive():
@@ -83,8 +85,6 @@ class MainController:
         elif self.state is State.DONE:
             # We're done :D - don't do anything
             pass
-        
-        self.cmd_pub.publish(cmd_vel)
 
     def spin(self):
         while not rospy.is_shutdown():
@@ -130,29 +130,58 @@ class MainController:
         self.map_server_process = launch.launch(node)
     
     def ar_callback(self, msg):
-        if msg.markers:
-            artag_exist = True
-            marker = msg.markers[0]
+        if not msg.markers:
+            return
 
-            rospy.logdebug("Marker found with id %d" % marker.id)
+        marker_ids = [str(m.id) for m in msg.markers]
 
-            # Note: tag ids TBD
+        
+        rospy.logdebug("Markers found: %s" % ", ".join(marker_ids))
+
+        for marker in msg.markers:
             if marker.id is 0:
                 if self.treasure_pose is None:
                     rospy.loginfo("Located treasure")
                 self.treasure_pose = marker.pose
-                
-                # ar_tag_sub.publich(marker.pose)
             
             elif marker.id is 9:
                 if self.goalzone_pose is None:
                     rospy.loginfo("Located goal zone")    
                 self.goalzone_pose = marker.pose
 
-            
-            # id = self.marker.id
-            # position = marker.pose.pose.position #Pose
-            # orientation = self.marker.pose.pose.orientation #Quaternion
+    def visualize_info(self):
+        if self.goalzone_pose is not None:
+            print "Visualizing GoalZone"
+            marker = Marker(
+                type=Marker.SPHERE,
+                action=Marker.ADD,
+                id=MarkerIds.GOAL_ZONE,
+                lifetime=0,
+                scale=Vector3(1, 1, 1),
+                header=self.goalzone_pose.header,
+                color=ColorRGBA(1.0, 0, 0),
+                pose=self.goalzone_pose.pose,
+                points=[self.goalzone_pose.pose.position],
+                text="Goal Zone"
+            )
+            self.visualizations_pub.publish(marker)
+        
+        if self.treasure_pose is not None:
+            print "Visualizing Treasure"
+            marker = Marker(
+                type=Marker.SPHERE,
+                action=Marker.ADD,
+                id=MarkerIds.TREASURE,
+                lifetime=0,
+                scale=Vector3(1, 1, 1),
+                header=self.Marker.header,
+                color=ColorRGBA(0, 1.0, 0),
+                pose=self.Marker.pose,
+                points=[self.Marker.pose.position],
+                text="Treasure Cube"
+            )
+            self.visualizations_pub.publish(marker)
+        #     PoseStamped()
 
 def main():
     rospy.init_node("main_controller")
