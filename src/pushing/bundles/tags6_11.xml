@@ -1,26 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <multimarker markers="6">
-<<<<<<< HEAD
-    <marker index="6" status="1">
-        <corner x="5" y="-4" z="-4" />
-        <corner x="5" y="4" z="-4" />
-        <corner x="5" y="4" z="4" />
-        <corner x="5" y="-4" z="4" />
-    </marker>
-    <marker index="7" status="1">
-        <corner x="4" y="5" z="-4" />
-        <corner x="-4" y="5" z="-4" />
-        <corner x="-4" y="5" z="4" />
-        <corner x="4" y="5" z="4" />
-    </marker>
-    <marker index="8" status="1">
-        <corner x="-5" y="4" z="-4" />
-        <corner x="-5" y="-4" z="-4" />
-        <corner x="-5" y="-4" z="4" />
-        <corner x="-5" y="4" z="4" />
-    </marker>
-=======
->>>>>>> e241fe7d0343c0d870fee5a5dda54af9f52581ce
     <marker index="9" status="1">
         <corner x="-4" y="-5" z="-4" />
         <corner x="4" y="-5" z="-4" />
@@ -33,8 +12,6 @@
         <corner x="4" y="4" z="5" />
         <corner x="-4" y="4" z="5" />
     </marker>
-<<<<<<< HEAD
-=======
     <marker index="8" status="1">
         <corner x="-5" y="4" z="-4" />
         <corner x="-5" y="-4" z="-4" />
@@ -47,21 +24,17 @@
         <corner x="5" y="4" z="4" />
         <corner x="5" y="-4" z="4" />
     </marker>
->>>>>>> e241fe7d0343c0d870fee5a5dda54af9f52581ce
     <marker index="11" status="1">
         <corner x="4" y="-4" z="-5" />
         <corner x="-4" y="-4" z="-5" />
         <corner x="-4" y="4" z="-5" />
         <corner x="4" y="4" z="-5" />
     </marker>
-<<<<<<< HEAD
-=======
     <marker index="7" status="1">
         <corner x="4" y="5" z="-4" />
         <corner x="-4" y="5" z="-4" />
         <corner x="-4" y="5" z="4" />
         <corner x="4" y="5" z="4" />
     </marker>
->>>>>>> e241fe7d0343c0d870fee5a5dda54af9f52581ce
 
 </multimarker>
