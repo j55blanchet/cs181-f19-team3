@@ -23,6 +23,10 @@ class MarkerIds:
     GOAL_ZONE = 0
     TREASURE  = 1
 
+map_save_file = "/home/husarion/catkin_ws/maps/autogenmap"
+if 'MAP_SAVE_FILE' in os.environ:
+    map_save_file = os.environ['MAP_SAVE_FILE']
+
 class MainController:
     
     def __init__(self):
@@ -48,7 +52,7 @@ class MainController:
 
         if self.state is State.INIT:
             rospy.loginfo("Starting objective search")
-            self.keyboard_teleop_process = self.start_node("teleop_twist_keyboard", "teleop_twist_keyboard.py", "")
+            # self.keyboard_teleop_process = self.start_node("teleop_twist_keyboard", "teleop_twist_keyboard.py", "")
             self.state = State.SEARCH_OBJECTIVES
 
         elif self.state is State.SEARCH_OBJECTIVES:
@@ -56,13 +60,13 @@ class MainController:
             if self.mapping_is_complete():
                 rospy.loginfo("Mapping complete! Stopping teleop keyboard")
 
-                self.keyboard_teleop_process.stop()
+                # self.keyboard_teleop_process.stop()
 
                 # stop robot at current position
                 self.cmd_pub.publish(Twist())
 
-                rospy.loginfo("Saving map")
-                self.state = State.SAVE_MAP
+                # rospy.loginfo("Saving map")
+                self.state = State.FETCH_TREASURE
                 self.save_map()
                 return
             
@@ -76,26 +80,24 @@ class MainController:
                 self.state = State.LOAD_MAP
         
         elif self.state is State.LOAD_MAP:
-            # TODO: detect when map is loaded and switch to FETCH_TREASURE
             if self.map_server_process is not None and self.map_server_process.is_alive():
                 # Switch to FETCH_TREASURE
                 rospy.loginfo("Map loading complete")
                 self.state = State.FETCH_TREASURE
 
         elif self.state is State.FETCH_TREASURE:
-            self.goto_treasure()
-            # TODO:
-            #    1) Determine target pose (far side of treasure pointing to goal zone)
-            #    2) Get path to target pose
-            #    3) Forward command from move_base
-            pass
+            if self.goto_pose(self.treasure_pose):
+                self.state = State.DELIVER_TREASURE
+                rospy.loginfo("Reached treasure! Heading to delivery now")
         
         elif self.state is State.DELIVER_TREASURE:
-            # TODO: Use move_base with target point as goal zone
-            pass
+            if self.goto_pose(self.goalzone_pose):
+                self.state = State.DONE
+                rospy.loginfo("Delivered treasure! All done now!")
 
         elif self.state is State.DONE:
             # We're done :D - don't do anything
+            rospy.loginfo("Delivery was completed")
             pass
 
     def spin(self):
@@ -106,19 +108,19 @@ class MainController:
     def mapping_is_complete(self):
         return self.treasure_pose is not None and self.goalzone_pose is not None
 
-    def goto_treasure(self):
+    def goto_pose(self, pose):
         
         # self.goalzone_pose
         client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
         client.wait_for_server()
 
         goal = MoveBaseGoal()
-        rospy.loginfo("Treasure pose: %s", str(self.treasure_pose))
+        rospy.loginfo("Target pose: %s", str(pose))
         goal.target_pose.header.frame_id = "map"
         # rospy.loginfo("Source frame_id = %s", str(self.treasure_pose.header.frame_id))
         goal.target_pose.header.stamp = rospy.Time.now()
 
-        goal.target_pose.pose.position = self.treasure_pose.pose.position
+        goal.target_pose.pose.position = pose.pose.position
         goal.target_pose.pose.orientation = Quaternion(0, 0, 0, 1) #a no-rotation quaternion
         client.send_goal(goal)
 
@@ -126,9 +128,11 @@ class MainController:
 
         if not waiting:
             rospy.logerr("Action server is not available")
-            rospy.signal_shutdwon("Action server not available")
+            # rospy.signal_shutdwon("Action server not available")
+            return False
         else:
             rospy.loginfo("Treasure seeking result" + str(client.get_result()))
+            return True
 
     def start_node(self, package, executable, args):
         node = roslaunch.core.Node(
@@ -142,15 +146,13 @@ class MainController:
     def save_map(self):
         rospy.loginfo("Saving map")
 
-        map_save_file_path = os.environ['MAP_SAVE_FILE']
-
         # rosrun map_server map_saver -f ~/test_map
-        self.map_saver_process = self.start_node("map_server", "map_saver", "-f %s" % map_save_file_path)
+        self.map_saver_process = self.start_node("map_server", "map_saver", "-f %s" % map_save_file)
 
     def start_map_server(self):
         rospy.loginfo("Loading map")
 
-        map_save_file_path = os.environ['MAP_SAVE_FILE']
+        map_save_file_path = map_save_file
         map_save_file_path += ".yaml"
 
         # rosrun map_server map_saver -f ~/test_map
