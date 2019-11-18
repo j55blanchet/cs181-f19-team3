@@ -10,14 +10,40 @@ Team 3 | CS 181 | Fall 2019
 1. `git submodule init` 
 1. `git submodule update`
 
-1. Install packages
+1. Install packages (NOTE: THIS MIGHT NOT BE NECESSARY)
     * `sudo apt-get install -y ros-kinetic-ar-track-alvar ros-kinetic-depthimage-to-laserscan ros-kinetic-find-object-2d ros-kinetic-frontier-exploration ros-kinetic-gmapping ros-kinetic-grid-map`
 
 1. If you plan on using Gazebo simulations, run: `rosdep install --from-paths src --ignore-src -r -y`
 
 1. Run `catkin_make` in repo base
 
+### Running
+1. SSH into rosbot, run git pull to get latest code
+1. Setup RVIZ connection so you can visualize robot from local machine
+    * ROS_IP should be set to wired default of `192.168.0.1` - check `~/.bashrc` on the robot to ensure it's what you want.
+    * On local machine you should set `ROS_IP` and `ROS_MASTER_URI` accordingly.
+1. Run `source prepare.bash` (root of workspace)
+
 ## System Architecture
+
+Hardware Control Nodes
+* `serial_bridge.sh`: for odometry
+* `rpilidarNode`: operates lidar 
+
+Third Party Components
+* `map_server map_server`: loads a saved map and publishes it to `/map`
+* `map_server map_saver`: reads from `/map` and publishes to a map file
+* `amcl`: performs localization using Monte Carlo / particle filter. Unsure if it works with dynamic map or requires a map file
+* `move_base`: performs path planning using DWA algorithm.
+* `gmapping`: TBD
+
+Utility Nodes
+* `static_transform_publisher`: used to publish transforms for lidar sensor and camera
+* `pose_to_tf_transform`: publishes `base_link` frame with respect to `odom`
+* `tf_to_pose`: used create pose from `map` to `base_link` for visualization purposes
+
+Business Logic Nodes
+* `main_controller.py`: contains FSM that controls other nodes and performs map saving / loading, etc.
 
 ### Used Packages
 
