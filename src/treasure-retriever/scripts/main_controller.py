@@ -1,8 +1,12 @@
 #!/usr/bin/env python
+import sys
+import select
 import os
 import rospy
 import actionlib
 import roslaunch
+
+import tf
 from std_msgs.msg import Header, ColorRGBA
 from geometry_msgs.msg import Twist, Vector3, Quaternion
 from ar_track_alvar_msgs.msg import AlvarMarkers
@@ -31,44 +35,46 @@ class MainController:
         self.state = State.INIT
         self.rate = rospy.Rate(10)
         self.action_seq = 0
-        self.cmd_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=0)
-        self.ar_tag_sub = rospy.Subscriber("/ar_pose_marker", AlvarMarkers, self.ar_callback, queue_size=1)
-        self.visualizations_pub = rospy.Publisher("/visualization_marker", Marker, queue_size=1)
-        self.init_time = rospy.Time.now()
 
-        self.launcher = roslaunch.scriptapi.ROSLaunch()
-        self.launcher.start()
         self.map_saver_process = None
         self.map_server_process = None
         self.keyboard_teleop_process = None
 
         self.goalzone_pose = None
         self.treasure_pose = None
+
+        self.cmd_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=0)
+        self.ar_tag_sub = rospy.Subscriber("/ar_pose_marker", AlvarMarkers, self.ar_callback, queue_size=1)
+        self.visualizations_pub = rospy.Publisher("/visualization_marker", Marker, queue_size=1)
+
+        self.launcher = roslaunch.scriptapi.ROSLaunch()
+        self.launcher.start()
+
+    def get_goal_pose(self):
+        pass
+        # return tf.
     
     def perform_action(self):
         self.action_seq += 1
 
-        rospy.loginfo_throttle(1, "[%04d] State: %s" % (self.action_seq, str(self.state)))
+        rospy.loginfo_throttle(1, "MainController Action#[%04d] State: %s. TreasureFound: %s . GoalFound: %s" %  \
+            (self.action_seq, str(self.state), self.treasure_pose is not None, self.goalzone_pose is not None))
 
         if self.state is State.INIT:
             rospy.loginfo("Starting objective search")
-            # self.keyboard_teleop_process = self.start_node("teleop_twist_keyboard", "teleop_twist_keyboard.py", "")
+            self.keyboard_teleop_process = self.start_node("teleop_twist_keyboard", "teleop_twist_keyboard.py", "")
             self.state = State.SEARCH_OBJECTIVES
+            rospy.loginfo("Starting teleoperation. Enter 'q' when finished mapping")
 
         elif self.state is State.SEARCH_OBJECTIVES:
-
-            if self.mapping_is_complete():
-                rospy.loginfo("Mapping complete! Stopping teleop keyboard")
-
-                # self.keyboard_teleop_process.stop()
-
-                # stop robot at current position
+            if not self.keyboard_teleop_process.is_alive():
+                rospy.loginfo("Mapping complete!")
                 self.cmd_pub.publish(Twist())
-
                 self.state = State.FETCH_TREASURE
-                return
             
         elif self.state is State.FETCH_TREASURE:
+            if self.treasure_pose is None:
+                rospy.logerr("Trying to fetch treasure when it hasn't been detected yet.")
             if self.goto_pose(self.treasure_pose):
                 self.state = State.DELIVER_TREASURE
                 rospy.loginfo("Reached treasure! Heading to delivery now")
@@ -85,8 +91,23 @@ class MainController:
 
     def spin(self):
         while not rospy.is_shutdown():
-            self.perform_action()
-            self.rate.sleep()
+            try:
+                self.perform_action()
+                self.visualize_info()
+                self.rate.sleep()
+            except KeyboardInterrupt:
+                if self.state is State.SEARCH_OBJECTIVES and self.mapping_is_complete():
+                    rospy.loginfo("Stopping teleop keyboard")
+                    self.keyboard_teleop_process.stop()
+                    rospy.loginfo("Teleop keyboard stopped")
+                elif self.state is State.SEARCH_OBJECTIVES:
+                    feedback = []
+                    if self.goalzone_pose is None: feedback.append("Goalzone not located")
+                    if self.treasure_pose is None: feedback.append("Treasure not located")
+                    rospy.logwarn("Can't quit mapping yet! %s", "and ".join(feedback))
+                else:
+                    rospy.loginfo("Quitting!")
+                    break
 
     def mapping_is_complete(self):
         return self.treasure_pose is not None and self.goalzone_pose is not None
@@ -136,11 +157,15 @@ class MainController:
                 if self.treasure_pose is None:
                     rospy.loginfo("Located treasure")
                 self.treasure_pose = marker.pose
+                self.treasure_pose.header = Header(frame_id="map")
+                self.treasure_pose.header.stamp = rospy.Time.now()
             
             elif marker.id is 9:
                 if self.goalzone_pose is None:
                     rospy.loginfo("Located goal zone")    
                 self.goalzone_pose = marker.pose
+                self.goalzone_pose.header = Header(frame_id="map")
+                self.goalzone_pose.header.stamp = rospy.Time.now()
 
     def visualize_info(self):
         if self.goalzone_pose is not None:
@@ -149,10 +174,10 @@ class MainController:
                 type=Marker.SPHERE,
                 action=Marker.ADD,
                 id=MarkerIds.GOAL_ZONE,
-                lifetime=0,
-                scale=Vector3(1, 1, 1),
+                lifetime=rospy.Duration(secs=0),
+                scale=Vector3(0.1, 0.1, 0.1),
                 header=self.goalzone_pose.header,
-                color=ColorRGBA(1.0, 0, 0),
+                color=ColorRGBA(1.0, 0, 0, 1.0),
                 pose=self.goalzone_pose.pose,
                 points=[self.goalzone_pose.pose.position],
                 text="Goal Zone"
@@ -165,12 +190,12 @@ class MainController:
                 type=Marker.SPHERE,
                 action=Marker.ADD,
                 id=MarkerIds.TREASURE,
-                lifetime=0,
-                scale=Vector3(1, 1, 1),
-                header=self.Marker.header,
-                color=ColorRGBA(0, 1.0, 0),
-                pose=self.Marker.pose,
-                points=[self.Marker.pose.position],
+                lifetime=rospy.Duration(secs=0),
+                scale=Vector3(0.1, 0.1, 0.1),
+                header=self.treasure_pose.header,
+                color=ColorRGBA(0, 1.0, 0, 1.0),
+                pose=self.treasure_pose.pose,
+                points=[self.treasure_pose.pose.position],
                 text="Treasure Cube"
             )
             self.visualizations_pub.publish(marker)
