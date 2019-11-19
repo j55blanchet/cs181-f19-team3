@@ -358,6 +358,12 @@ Observed Delays
  * Hz after disabling 3D camera: 15Hz
  * Hz before disabling 3D camera: none over 15 secs
 
+**Costmap Updates (target: 5Hz) **
+* Local costmap Hz before tweaking costmap resolution: 2.4-2.8Hz
+* Local costmap Hz after tweaking costmap resolution: 3-3.2Hz
 
- **Map Updates**
- * After disabling 3D camera: mostly no new messaes, sometimes average rate of 0.2-0.3 Hz
+
+ **Map Tuning**
+ * Refered to https://ieeexplore.ieee.org/document/7847825 for guidance
+ * After disabling 3D camera: mostly no new messaes, sometimes average rate of 0.3-0.9Hz
+ * After halving # of particles to 50: still > half no new messages. average rate 0.4-0.9Hz when reported
