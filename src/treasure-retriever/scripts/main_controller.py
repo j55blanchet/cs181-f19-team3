@@ -5,6 +5,8 @@ import os
 import rospy
 import actionlib
 import roslaunch
+
+import tf
 from std_msgs.msg import Header, ColorRGBA
 from geometry_msgs.msg import Twist, Vector3, Quaternion
 from ar_track_alvar_msgs.msg import AlvarMarkers
@@ -48,6 +50,9 @@ class MainController:
         self.launcher = roslaunch.scriptapi.ROSLaunch()
         self.launcher.start()
 
+    def get_goal_pose(self):
+        pass
+        # return tf.
     
     def perform_action(self):
         self.action_seq += 1
@@ -88,6 +93,7 @@ class MainController:
         while not rospy.is_shutdown():
             try:
                 self.perform_action()
+                self.visualize_info()
                 self.rate.sleep()
             except KeyboardInterrupt:
                 if self.state is State.SEARCH_OBJECTIVES and self.mapping_is_complete():
@@ -151,11 +157,15 @@ class MainController:
                 if self.treasure_pose is None:
                     rospy.loginfo("Located treasure")
                 self.treasure_pose = marker.pose
+                self.treasure_pose.header = Header(frame_id="map")
+                self.treasure_pose.header.stamp = rospy.Time.now()
             
             elif marker.id is 9:
                 if self.goalzone_pose is None:
                     rospy.loginfo("Located goal zone")    
                 self.goalzone_pose = marker.pose
+                self.goalzone_pose.header = Header(frame_id="map")
+                self.goalzone_pose.header.stamp = rospy.Time.now()
 
     def visualize_info(self):
         if self.goalzone_pose is not None:
@@ -164,10 +174,10 @@ class MainController:
                 type=Marker.SPHERE,
                 action=Marker.ADD,
                 id=MarkerIds.GOAL_ZONE,
-                lifetime=0,
-                scale=Vector3(1, 1, 1),
+                lifetime=rospy.Duration(secs=0),
+                scale=Vector3(0.1, 0.1, 0.1),
                 header=self.goalzone_pose.header,
-                color=ColorRGBA(1.0, 0, 0),
+                color=ColorRGBA(1.0, 0, 0, 1.0),
                 pose=self.goalzone_pose.pose,
                 points=[self.goalzone_pose.pose.position],
                 text="Goal Zone"
@@ -180,12 +190,12 @@ class MainController:
                 type=Marker.SPHERE,
                 action=Marker.ADD,
                 id=MarkerIds.TREASURE,
-                lifetime=0,
-                scale=Vector3(1, 1, 1),
-                header=self.Marker.header,
-                color=ColorRGBA(0, 1.0, 0),
-                pose=self.Marker.pose,
-                points=[self.Marker.pose.position],
+                lifetime=rospy.Duration(secs=0),
+                scale=Vector3(0.1, 0.1, 0.1),
+                header=self.treasure_pose.header,
+                color=ColorRGBA(0, 1.0, 0, 1.0),
+                pose=self.treasure_pose.pose,
+                points=[self.treasure_pose.pose.position],
                 text="Treasure Cube"
             )
             self.visualizations_pub.publish(marker)
