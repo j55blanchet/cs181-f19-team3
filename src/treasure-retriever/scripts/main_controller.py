@@ -52,7 +52,8 @@ class MainController:
     def perform_action(self):
         self.action_seq += 1
 
-        rospy.loginfo_throttle(1, "MainController Action#[%04d] State: %s" % (self.action_seq, str(self.state)))
+        rospy.loginfo_throttle(1, "MainController Action#[%04d] State: %s. TreasureFound: %s . GoalFound: %s" %  \
+            (self.action_seq, str(self.state), self.treasure_pose is not None, self.goalzone_pose is not None))
 
         if self.state is State.INIT:
             rospy.loginfo("Starting objective search")
@@ -67,6 +68,8 @@ class MainController:
                 self.state = State.FETCH_TREASURE
             
         elif self.state is State.FETCH_TREASURE:
+            if self.treasure_pose is None:
+                rospy.logerr("Trying to fetch treasure when it hasn't been detected yet.")
             if self.goto_pose(self.treasure_pose):
                 self.state = State.DELIVER_TREASURE
                 rospy.loginfo("Reached treasure! Heading to delivery now")
