@@ -64,7 +64,7 @@
         <rosparam file="$(find treasure-retriever)/configs/costmap_common_params.yaml" command="load" ns="local_costmap"/>
         <rosparam file="$(find treasure-retriever)/configs/local_costmap_params.yaml" command="load"/>
         <rosparam file="$(find treasure-retriever)/configs/global_costmap_params.yaml" command="load"/>
-        <rosparam file="$(find treasure-retriever)/configs/trajectory_planner_alone.yaml" command="load"/>
+        <rosparam file="$(find treasure-retriever)/configs/trajectory_planner.yaml" command="load"/>
         <param name="move_base/DWAPlannerROS/yaw_goal_tolerance" value="1.0"/>
         <param name="move_base/DWAPlannerROS/xy_goal_tolerance" value="2.0"/>
     </node>
